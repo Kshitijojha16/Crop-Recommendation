@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Companion Crops Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            background-color: white;
+            display: none;
+        }
+        .nav-buttons {
+            margin-bottom: 20px;
+        }
+        .nav-buttons a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin-right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-buttons">
+        <a href="/">Home</a>
+        <a href="/manual-input">Manual Input</a>
+    </div>
+
+    <div class="header">
+        <h1>Find Companion Crops</h1>
+        <p>Enter a crop name to find other crops that grow well in similar conditions</p>
+    </div>
+
+    <div class="search-container">
+        <div class="input-group">
+            <label>Crop Name:</label>
+            <input type="text" id="cropName" placeholder="Enter crop name (e.g., rice, wheat, maize)" required>
+        </div>
+        <button onclick="findCompanionCrops()">Search Companion Crops</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        async function findCompanionCrops() {
+            const cropName = document.getElementById('cropName').value;
+            if (!cropName.trim()) {
+                alert('Please enter a crop name');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/companion-crops', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ crop: cropName })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'block';
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    let html = `<h3>Companion Crops for ${data.input_crop}</h3>`;
+                    if (data.companion_crops.length > 0) {
+                        html += '<ul style="list-style-type: none; padding: 0;">';
+                        data.companion_crops.forEach((crop, index) => {
+                            html += `<li style="padding: 10px; margin: 5px 0; background-color: #E3F2FD; border-radius: 4px;">
+                                ${index + 1}. ${crop}</li>`;
+                        });
+                        html += '</ul>';
+                    } else if (data.growing_conditions) {
+                        html += `<p><em>${data.growing_conditions}</em></p>`;
+                    }
+                    resultDiv.innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<p style="color: red;">Error: Failed to find companion crops</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
